@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Графік їжі — Meal Planner (Next.js + TypeScript)
 
-## Getting Started
+A phone-first PWA for planning a month of meals, generating a categorized
+shopping list, and syncing across devices. Menus are generated in a chat with
+**Claude** and imported as JSON — the app deliberately holds **no API key**;
+the LLM stays outside the client.
 
-First, run the development server:
+**Live demo:** _add your Vercel URL here after deploy_
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This is a full rewrite of an original vanilla-JS PWA into a typed **React 19 /
+Next.js (App Router)** codebase — same product, real component architecture.
+
+---
+
+## Features
+
+- **Month calendar** with per-day meals (breakfast / lunch / dinner / snack), meal dots, and previews.
+- **Import from Claude** — paste the JSON Claude returns; robust parser tolerates ```json fences and surrounding prose. Merge or replace.
+- **Export** the current month or the whole plan as JSON (to save or send back to Claude for edits).
+- **Products**
+  - **Calorie norm** — Mifflin–St Jeor BMR × activity × goal; splits the target across meals and derives a portion-scaling factor for the whole plan.
+  - **Dishes** — unique dishes for the month, deduplicated with counts and scaled calories.
+  - **Shopping list** — aggregated quantities grouped into *pantry*, *freezer*, and *fresh-by-week*, with per-item purchase tracking and progress.
+- **Cloud sync** — Firebase Auth + Firestore, layered over localStorage. A non-destructive merge means an empty device never wipes a filled cloud (and vice-versa).
+- **PWA** — installable, offline-friendly, phone-first, dark-mode aware.
+
+## Tech
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router), React 19 |
+| Language | TypeScript (strict) |
+| State | Custom hooks (`usePlan`, `useSync`) over `useState` + `localStorage` |
+| Cloud | Firebase Auth + Firestore (client SDK) |
+| Styling | Hand-authored CSS, CSS custom properties, light/dark themes |
+
+## Architecture
+
+```
+app/            layout + page (composition root, client component)
+components/      Calendar, DaySheet, ImportSheet, ExportSheet,
+                 ProductsSheet, AccountSheet, Sheet, Icon, Toast
+hooks/
+  usePlan.ts     store + view state, mutators, localStorage persistence
+  useSync.ts     Firebase auth + Firestore snapshot, debounced push, merge
+lib/
+  types.ts       domain types (Store, DayMeals, Profile, …)
+  foodData.ts    food DB, constants, pure calorie/format/date helpers
+  plan.ts        pure derivations: dishes, shopping list, import/export, prompt
+  store.ts       normalize, load/save, cloud merge logic
+  firebase.ts    lazy, env-driven init (guarded when unconfigured)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Business logic in `lib/` is **pure and framework-free** — the same functions
+that render the UI are trivially unit-testable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+cp .env.example .env.local   # optional: fill in Firebase to enable cloud sync
+npm run dev                  # http://localhost:3000
+```
 
-## Learn More
+Without Firebase env vars the app runs fully on `localStorage`; the Account
+sheet simply reports that sync is not configured.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Push to GitHub and import the repo on [Vercel](https://vercel.com). Add the
+`NEXT_PUBLIC_FIREBASE_*` variables from `.env.example` in the project settings.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Firebase config
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The `NEXT_PUBLIC_FIREBASE_*` values are public and safe on the client — access
+is enforced by Firestore security rules, so each signed-in user can read and
+write only their own `plans/{uid}` document.

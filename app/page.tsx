@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Calendar from "@/components/Calendar";
 import DaySheet from "@/components/DaySheet";
-import ImportSheet from "@/components/ImportSheet";
+import GenerateSheet from "@/components/GenerateSheet";
 import ExportSheet from "@/components/ExportSheet";
 import ProductsSheet from "@/components/ProductsSheet";
 import AccountSheet from "@/components/AccountSheet";
@@ -10,6 +10,7 @@ import Toast from "@/components/Toast";
 import Icon from "@/components/Icon";
 import { usePlan } from "@/hooks/usePlan";
 import { useSync } from "@/hooks/useSync";
+import { useApiAuth } from "@/hooks/useApiAuth";
 import { MONTHS } from "@/lib/foodData";
 import type { Store } from "@/lib/types";
 
@@ -27,6 +28,7 @@ export default function Home() {
   useEffect(() => { storeRef.current = plan.store; }, [plan.store]);
 
   const sync = useSync(plan.store, storeRef, plan.applyingRemote, plan.applyRemote);
+  const apiAuth = useApiAuth();
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -103,16 +105,14 @@ export default function Home() {
         onClose={close}
       />
 
-      <ImportSheet
+      <GenerateSheet
         open={sheet === "import"}
         view={plan.view}
+        auth={apiAuth}
         onClose={close}
         onCopyPrompt={(t) => copy(t, "Промпт скопійовано")}
-        onImport={(parsed, merge) => {
-          const res = plan.importMenu(parsed, merge);
-          if (res) showToast(`Імпортовано ${res.added} дн.`);
-          return res;
-        }}
+        onImport={(parsed, merge) => plan.importMenu(parsed, merge)}
+        onToast={showToast}
       />
 
       <ExportSheet open={sheet === "export"} store={plan.store} view={plan.view} onClose={close} onCopy={(t) => copy(t, "JSON скопійовано")} />

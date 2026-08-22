@@ -2,7 +2,9 @@
 // Claude key never touches the browser — generation happens on the server.
 import type { Store } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+// Defaults to the deployed backend so production works even if the env var is
+// unset; local dev overrides this via .env.local (NEXT_PUBLIC_API_URL=localhost).
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://recipe-ai-api-wduh.onrender.com/api";
 const TOKEN_KEY = "recipeApi.token";
 
 export interface ApiUser {

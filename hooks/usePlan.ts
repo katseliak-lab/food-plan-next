@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MEALS } from "@/lib/foodData";
 import { applyImport as applyImportPure, monthPrefixOf } from "@/lib/plan";
 import { loadStore, normalize, persistStore } from "@/lib/store";
+import { seedStore } from "@/lib/seedData";
 import type { DayMeals, Profile, Store } from "@/lib/types";
 
 const startOfMonth = (d: Date): Date => {
@@ -36,8 +37,15 @@ export function usePlan(): Plan {
   const applyingRemote = useRef(false);
 
   // Hydrate from localStorage after mount (avoids SSR/client mismatch).
+  // If there's no data yet, seed a default plan so a fresh device shows content.
   useEffect(() => {
-    setStore(loadStore());
+    const s = loadStore();
+    if (Object.keys(s.meals).length === 0) {
+      const seed = seedStore();
+      s.meals = seed.meals;
+      s.ingredients = { ...seed.ingredients, ...s.ingredients };
+    }
+    setStore(s);
     setReady(true);
   }, []);
 

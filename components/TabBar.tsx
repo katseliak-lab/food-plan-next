@@ -1,12 +1,13 @@
 "use client";
 
-export type Tab = "today" | "week" | "month" | "shopping";
+export type Tab = "today" | "week" | "month" | "shopping" | "profile";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "today", label: "Сьогодні" },
   { id: "week", label: "Тиждень" },
   { id: "month", label: "Місяць" },
   { id: "shopping", label: "Покупки" },
+  { id: "profile", label: "Профіль" },
 ];
 
 export default function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {

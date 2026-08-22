@@ -5,9 +5,9 @@ import TodayScreen from "@/components/screens/TodayScreen";
 import WeekScreen from "@/components/screens/WeekScreen";
 import MonthScreen from "@/components/screens/MonthScreen";
 import ShoppingScreen from "@/components/screens/ShoppingScreen";
+import ProfileScreen from "@/components/screens/ProfileScreen";
 import SwapSheet, { type SwapTarget } from "@/components/SwapSheet";
 import DayMealsSheet from "@/components/DayMealsSheet";
-import SettingsSheet from "@/components/SettingsSheet";
 import GenerateSheet from "@/components/GenerateSheet";
 import Toast from "@/components/Toast";
 import { usePlan } from "@/hooks/usePlan";
@@ -15,19 +15,18 @@ import { useApiAuth } from "@/hooks/useApiAuth";
 import { useBackendSync } from "@/hooks/useBackendSync";
 import type { MealKey, Store } from "@/lib/types";
 
-const TABS: Tab[] = ["today", "week", "month", "shopping"];
+const TABS: Tab[] = ["today", "week", "month", "shopping", "profile"];
 
 export default function Home() {
   const plan = usePlan();
   const apiAuth = useApiAuth();
   const storeRef = useRef<Store>(plan.store);
   useEffect(() => { storeRef.current = plan.store; }, [plan.store]);
-  useBackendSync(plan.store, storeRef, plan.applyingRemote, plan.applyRemote, apiAuth.user);
+  const backendSync = useBackendSync(plan.store, storeRef, plan.applyingRemote, plan.applyRemote, apiAuth.user);
 
   const [tab, setTab] = useState<Tab>("today");
   const [swap, setSwap] = useState<SwapTarget | null>(null);
   const [daySheet, setDaySheet] = useState<string | null>(null);
-  const [settings, setSettings] = useState(false);
   const [generate, setGenerate] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +58,7 @@ export default function Home() {
   return (
     <div className="app">
       {tab === "today" && (
-        <TodayScreen store={plan.store} view={plan.view} onSwap={(d, m) => setSwap({ day: d, meal: m })} onSettings={() => setSettings(true)} />
+        <TodayScreen store={plan.store} view={plan.view} onSwap={(d, m) => setSwap({ day: d, meal: m })} onSettings={() => goTab("profile")} />
       )}
       {tab === "week" && (
         <WeekScreen store={plan.store} view={plan.view} onSwap={(d, m) => setSwap({ day: d, meal: m })} onGenerate={() => setGenerate(true)} />
@@ -77,12 +76,14 @@ export default function Home() {
       {tab === "shopping" && (
         <ShoppingScreen store={plan.store} view={plan.view} onSetBought={plan.setBought} />
       )}
+      {tab === "profile" && (
+        <ProfileScreen store={plan.store} auth={apiAuth} syncStatus={backendSync.status} onPatch={plan.patchProfile} />
+      )}
 
       <TabBar active={tab} onChange={goTab} />
 
       <SwapSheet target={swap} store={plan.store} view={plan.view} onSet={setMeal} onClose={() => setSwap(null)} />
       <DayMealsSheet dayKey={daySheet} store={plan.store} view={plan.view} onSwap={(d, m) => setSwap({ day: d, meal: m })} onClearDay={plan.clearDay} onClose={() => setDaySheet(null)} />
-      <SettingsSheet open={settings} store={plan.store} onPatch={plan.patchProfile} onClose={() => setSettings(false)} />
       <GenerateSheet
         open={generate}
         view={plan.view}

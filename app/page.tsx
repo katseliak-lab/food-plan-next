@@ -11,6 +11,7 @@ import Icon from "@/components/Icon";
 import { usePlan } from "@/hooks/usePlan";
 import { useSync } from "@/hooks/useSync";
 import { useApiAuth } from "@/hooks/useApiAuth";
+import { useBackendSync } from "@/hooks/useBackendSync";
 import { MONTHS } from "@/lib/foodData";
 import type { Store } from "@/lib/types";
 
@@ -29,6 +30,7 @@ export default function Home() {
 
   const sync = useSync(plan.store, storeRef, plan.applyingRemote, plan.applyRemote);
   const apiAuth = useApiAuth();
+  useBackendSync(plan.store, storeRef, plan.applyingRemote, plan.applyRemote, apiAuth.user);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);

@@ -81,6 +81,9 @@ export const api = {
     req<Preferences>("/preferences", { method: "PUT", body: patch, auth: true }),
   generateMenu: (month: string, days?: number) =>
     req<MenuRecord>("/menu/generate", { method: "POST", body: { month, days }, auth: true }),
+  getPlan: () => req<{ data: Store | null }>("/plan", { auth: true }),
+  putPlan: (store: Store) =>
+    req<{ updatedAt: string }>("/plan", { method: "PUT", body: store, auth: true }),
 };
 
 // The generated menu's `data` is import-compatible with the app's store shape.

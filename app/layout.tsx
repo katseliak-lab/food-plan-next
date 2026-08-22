@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import "./plan.css";
+import "./modernist.css";
 
 export const metadata: Metadata = {
   title: "Графік їжі",
